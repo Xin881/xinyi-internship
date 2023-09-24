@@ -9,7 +9,7 @@ import botocore
 from flask import send_file
 # import pdfplumber
 # Use BytesIO to handle the binary content
-# from werkzeug.utils import secure_filename
+from werkzeug.utils import secure_filename
 from config import *
 
 app = Flask(__name__)
@@ -174,15 +174,6 @@ def signup_post():
 
     return render_template('index.html')
 
-# @app.route("/displayStudInfo", methods=['GET', 'POST'])
-# def viewStudentInfo():
-#     statement = "SELECT s.* FROM student s JOIN company c ON s.com_id = c.com_id WHERE s.com_id = 'C0001';"
-#     cursor = db_conn.cursor()
-#     cursor.execute(statement)
-#     result = cursor.fetchall()
-#     cursor.close()
-    
-#     return render_template('display_studInfo.html', data=result)
 
 @app.route("/displayStudInfo", methods=['GET', 'POST'])
 def viewStudentInfo():
@@ -400,6 +391,73 @@ def EditStudProfile(stud_id):
     
     return "Student not found"
 
+
+@app.route("/addemp", methods=['POST'])
+def AddEmp():
+    stud_id = request.form['stud_id']
+    stud_name = request.form['stud_name']
+    stud_gender = request.form['stud_gender']
+    stud_IC = request.form['stud_ic']
+    stud_email = request.form['stud_mail']
+    stud_HP = request.form['stud_phone']
+    stud_currAddress = request.form['stud_currAddress']
+    stud_homeAddress = request.form['stud_homeAddress']
+    stud_programme = request.form['stud_program']
+    stud_image_file = request.files['stud_image_file']
+    stud_pwd = request.form['password']
+    stud_cgpa = request.form['stud_cgpa']
+    lec_email = request.form['lec_email']
+    com_email = request.form['com_email']
+    
+
+
+    insert_sql = "INSERT INTO student VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s , %s ,%s, %s ,%s)"
+    cursor = db_conn.cursor()
+
+    if stud_image_file.filename == "":
+        return "Please select a file"
+
+    try:
+
+        cursor.execute(insert_sql, (stud_id, stud_name, stud_gender, stud_IC, stud_email, stud_HP, stud_currAddress, stud_homeAddress, stud_programme, 
+                                    stud_image_file ,stud_pwd, stud_cgpa, lec_email ,com_email))
+        db_conn.commit()
+        
+        # Securely generate a unique filename for the resume
+        #updated_resume_filename = secure_filename(stud_image_file.filename)
+        
+        # Uplaod image file in S3 #
+        #stud_image_file_name_in_s3 = "stud-id-" + str(stud_id) + "_pdf"
+        stud_image_file_name_in_s3 = "stud-id-" + str(stud_email) + "_pdf.pdf"
+        s3 = boto3.resource('s3')
+
+        try:
+            print("Data inserted in MySQL RDS... uploading pdf to S3...")
+            s3.Bucket(custombucket).put_object(Key=stud_image_file_name_in_s3, Body=stud_image_file, ContentType='application/pdf')
+            bucket_location = boto3.client('s3').get_bucket_location(Bucket=custombucket)
+            s3_location = (bucket_location['LocationConstraint'])
+
+            if s3_location is None:
+                s3_location = ''
+            else:
+                s3_location = '-' + s3_location
+
+            object_url = f"https://{custombucket}.s3.amazonaws.com/{stud_image_file_name_in_s3}"
+
+            # object_url = "https://s3{0}.amazonaws.com/{1}/{2}".format(
+            #     s3_location,
+            #     custombucket,
+            #     stud_image_file_name_in_s3)
+
+        except Exception as e:
+            return str(e)
+
+    finally:
+        cursor.close()
+
+    print("all modification done...")
+    return render_template('appStudOutput.html', name=stud_name, object_url=object_url)
+        #return to xinyi
 
 if __name__ == '__main__':
     app.secret_key = 'cc_key'
