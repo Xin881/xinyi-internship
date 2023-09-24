@@ -1,12 +1,14 @@
 # from curses import flash
 # from flask_wtf.csrf import CSRFProtect, CSRFError
 from io import BytesIO
-from flask import Flask, render_template, session, request, redirect, flash, jsonify, url_for
+from flask import Flask, render_template, request, session, redirect, flash, jsonify, url_for
 from pymysql import connections
 import os
 import boto3
 import botocore
 from flask import send_file
+# import pdfplumber
+# Use BytesIO to handle the binary content
 from werkzeug.utils import secure_filename
 from config import *
 
@@ -53,6 +55,14 @@ def adminHomePage():
 @app.route("/studHomePage", methods=['GET', 'POST'])
 def studHomePage():
     return render_template('stud_home.html')
+
+@app.route("/studRegisterPage", methods=['GET', 'POST'])
+def studRegisterPage():
+    return render_template('stud_registerForm.html')
+
+@app.route("/addStudOutputPage", methods=['GET', 'POST'])
+def addStudOutputPage():
+    return render_template('stud_addStudOutput.html')
 
 @app.route("/ziyuPortfolio", methods=['GET', 'POST'])
 def ziyuPortfolio():
@@ -152,11 +162,13 @@ def login_post():
     else:
         return "Access denied"
     
+
 @app.route('/logout')
 def logout():
    # remove the username from the session if it is there
    session.pop('username', None)
    return redirect(url_for('index'))
+
 
 @app.route('/signup', methods=['POST'])
 def signup_post():
@@ -171,7 +183,7 @@ def signup_post():
     cursor.close()
 
     return render_template('index.html')
-
+    
 
 @app.route("/displayStudInfo", methods=['GET', 'POST'])
 def viewStudentInfo():
@@ -189,6 +201,7 @@ def viewStudentInfo():
     
     else:
         return "Nothing found"
+    
 
 @app.route('/displayStudInfoDetails/<stud_email>')
 def viewStudentInfoDetails(stud_email):
@@ -198,6 +211,7 @@ def viewStudentInfoDetails(stud_email):
     result = cursor.fetchone()
     
     return render_template('comp_displayStudInfoDet.html', student=result)
+
 
 @app.route('/displayStudResume/<stud_email>')
 def displayStudentResume(stud_email):
@@ -215,6 +229,7 @@ def displayStudentResume(stud_email):
         return "Invalid student."
         
     return render_template('comp_displayStudInfoDet.html')
+    
 
 # ADDITIONAL FOR LEC_VIEWSTUDENT
 @app.route("/lecturerView", methods=['GET', 'POST'])
@@ -236,7 +251,7 @@ def lecturerViewStudent():
 
 # ADDITIONAL FOR LEC_VIEWSTUDENT
 @app.route('/lecturerViewResume/<stud_email>')
-def lecturerViewStudResume(stud_id):
+def lecturerViewStudResume(stud_email):
     statement = "SELECT stud_email, stud_resume FROM student s WHERE stud_email = %s"
     cursor = db_conn.cursor()
     cursor.execute(statement, (stud_email,))
@@ -249,22 +264,19 @@ def lecturerViewStudResume(stud_id):
     else: 
         return jsonify({"resume_url": None})
 
-
-@app.route("/studProfile/", methods=['GET', 'POST'])
-def GetStudInfo():
-    username = session.get('username')
-
-    if username:
-        # Fetch student information from the database
-        statement = "SELECT * FROM student WHERE stud_email = %s;"
-        cursor = db_conn.cursor()
-        cursor.execute(statement, (username,))
-        student_data = cursor.fetchone()
-        cursor.close()
+# ADDITIONAL FOR LEC_VIEWSTUDENT
+@app.route('/lecturerViewReport/<stud_email>')
+def lecturerViewStudReport(stud_email):
+    statement = "SELECT stud_email FROM student s WHERE stud_email = %s"
+    cursor = db_conn.cursor()
+    cursor.execute(statement, (stud_email,))
+    results = cursor.fetchone()
     
-        return render_template('studProfile.html', student=student_data)
-
-    return "Student not found"
+    if results: 
+        report_url = "https://" + bucket + ".s3.amazonaws.com/stud-id-" + stud_email + "_rpt.pdf"
+        return jsonify({"report_url": report_url})
+    else: 
+        return jsonify({"report_url": None})
 
 
 @app.route("/displayComInfo", methods=['GET', 'POST'])
@@ -293,6 +305,7 @@ def delete_company(com_email):
     # Return the updated data as JSON
     return redirect(url_for('viewCompanyInfo'))
 
+
 @app.route('/update_company_status/<com_email>', methods=['POST'])
 def update_company_status(com_email):
 
@@ -309,6 +322,7 @@ def update_company_status(com_email):
         cursor.close()
         return redirect(url_for('viewCompanyInfo'))
 
+
 # Function to fetch student data for editing
 def get_student_data(stud_id):
     cursor = db_conn.cursor()
@@ -318,50 +332,79 @@ def get_student_data(stud_id):
     return student_data
 
 
+
+@app.route("/studProfile/", methods=['GET', 'POST'])
+def GetStudInfo():
+    username = session.get('username')
+
+    if username:
+        # Fetch student information from the database
+        statement = "SELECT * FROM student WHERE stud_email = %s;"
+        cursor = db_conn.cursor()
+        cursor.execute(statement, (username,))
+        student_data = cursor.fetchone()
+        cursor.close()
+    
+        return render_template('studProfile.html', student=student_data)
+
+    return "Student not found"
+
+
+
 # Route to edit student profile
-@app.route("/editStudProfile/<stud_id>", methods=['GET', 'POST'])
-def EditStudProfile(stud_id):
+@app.route("/editStudProfile/<stud_email>", methods=['GET', 'POST'])
+def EditStudProfile(stud_email):
     username =  session.get('username')
+    stud_email = stud_email 
 
     if username:
         if request.method == 'GET':
-            statement = "SELECT * FROM student WHERE stud_id = %s;"
+            statement = "SELECT * FROM student WHERE stud_email = %s;"
             cursor = db_conn.cursor()
             cursor.execute(statement, (username,))
             student_data = cursor.fetchone()
             cursor.close()
 
-            return render_template('editStudProfile.html', student=student_data)
+            if results: 
+                stud_id, stud_name, stud_gender, stud_IC, stud_email, stud_HP, stud_currAddress, stud_homeAddress, stud_programme, stud_cgpa, stud_resume, stud_cgpa = student_data
+                resume = "https://" + bucket + ".s3.amazonaws.com/stud-id-" + studEmail + "_pdf.pdf"
+                return render_template('comp_displayStudResume.html', student=student_data, resume=resume)
+                
+            else: 
+                return "Invalid student."
+            
+            return render_template('stud_editStudProfile.html', student=student_data)
     
 
         elif request.method == 'POST':
             # Retrieve form data
+            stud_id = request.form['stud_id']
             stud_name = request.form['stud_name']
             stud_programme = request.form['stud_programme']
-            stud_mail = request.form['stud_mail']
             stud_HP = request.form['stud_HP']
             stud_ic = request.form['stud_ic']
             stud_gender = request.form['stud_gender']
             stud_currAddress = request.form['stud_currAddress']
             stud_homeAddress = request.form['stud_homeAddress']
-            stud_resume = request.files['stud_resume']
+            stud_image_file = request.files['stud_image_file']
 
             # Update the database with the new data
             cursor = db_conn.cursor()
-            cursor.execute(f"UPDATE Student SET stud_name = '{stud_name}', stud_programme = '{stud_programme}', "
-                        f"stud_email = '{stud_mail}', stud_HP = '{stud_HP}', stud_IC = '{stud_ic}', "
+            cursor.execute(f"UPDATE student SET stud_id = '{stud_id}',stud_name = '{stud_name}', stud_programme = '{stud_programme}', "
+                        f"stud_HP = '{stud_HP}', stud_IC = '{stud_ic}', "
                         f"stud_gender = '{stud_gender}', stud_currAddress = '{stud_currAddress}', "
-                        f"stud_homeAddress = '{stud_homeAddress}' WHERE stud_id = {stud_id}")
+                        f"stud_homeAddress = '{stud_homeAddress}' WHERE stud_email = {stud_email}")
             db_conn.commit()
             cursor.close()
 
             # Check if a new resume file is provided
             if stud_resume.filename != "":
                 s3 = boto3.resource('s3')
-                stud_resume_name_in_s3 = "stud-id-" + str(stud_id) + "_resume.pdf"
+                stud_image_file_name_in_s3 = "stud-id-" + str(stud_email) + "_pdf.pdf"
 
                 try:
-                    s3.Bucket(custombucket).put_object(Key=stud_resume_name_in_s3, Body=stud_resume, ContentType='application/pdf')
+                    print("Data inserted in MySQL RDS... updating pdf to S3...")
+                    s3.Bucket(custombucket).put_object(Key=stud_image_file_name_in_s3, Body=stud_image_file, ContentType='application/pdf')
                     bucket_location = boto3.client('s3').get_bucket_location(Bucket=custombucket)
                     s3_location = (bucket_location['LocationConstraint'])
 
@@ -370,22 +413,21 @@ def EditStudProfile(stud_id):
                     else:
                         s3_location = '-' + s3_location
 
-                    object_url = "https://s3{0}.amazonaws.com/{1}/{2}".format(
-                        s3_location,
-                        custombucket,
-                        stud_resume_name_in_s3)
+                    object_url = f"https://{custombucket}.s3.amazonaws.com/{stud_image_file_name_in_s3}"
                     
                     # Update the stud_resume field in the database
                     cursor = db_conn.cursor()
-                    cursor.execute(f"UPDATE student SET stud_resume = '{object_url}' WHERE stud_id = {stud_id}")
+                    cursor.execute(f"UPDATE student SET stud_resume = '{object_url}' WHERE stud_email = {stud_email}")
                     db_conn.commit()
                     cursor.close()
 
                 except Exception as e:
                     return str(e)
 
+
+
             flash("Student profile updated successfully", "success")
-            return redirect(url_for('GetStudInfo', stud_id=stud_id))
+            return redirect(url_for('GetStudInfo', stud_email=stud_email, object_url=object_url))
     
     return "Student not found"
 
@@ -408,7 +450,6 @@ def AddEmp():
     com_email = request.form['com_email']
     
 
-
     insert_sql = "INSERT INTO student VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s , %s ,%s, %s ,%s)"
     cursor = db_conn.cursor()
 
@@ -421,11 +462,7 @@ def AddEmp():
                                     stud_image_file ,stud_pwd, stud_cgpa, lec_email ,com_email))
         db_conn.commit()
         
-        # Securely generate a unique filename for the resume
-        #updated_resume_filename = secure_filename(stud_image_file.filename)
-        
-        # Uplaod image file in S3 #
-        #stud_image_file_name_in_s3 = "stud-id-" + str(stud_id) + "_pdf"
+        # Uplaod image file in S3
         stud_image_file_name_in_s3 = "stud-id-" + str(stud_email) + "_pdf.pdf"
         s3 = boto3.resource('s3')
 
@@ -442,11 +479,6 @@ def AddEmp():
 
             object_url = f"https://{custombucket}.s3.amazonaws.com/{stud_image_file_name_in_s3}"
 
-            # object_url = "https://s3{0}.amazonaws.com/{1}/{2}".format(
-            #     s3_location,
-            #     custombucket,
-            #     stud_image_file_name_in_s3)
-
         except Exception as e:
             return str(e)
 
@@ -456,6 +488,7 @@ def AddEmp():
     print("all modification done...")
     return render_template('appStudOutput.html', name=stud_name, object_url=object_url)
         #return to xinyi
+
 
 if __name__ == '__main__':
     app.secret_key = 'cc_key'
