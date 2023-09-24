@@ -117,7 +117,7 @@ def authenticate_user(username, password):
                 elif user_role == 'LECTURER':
                     return 'lecturerViewStudent' # CHANGE BASED ON IMPLEMENTATION
                 elif user_role == 'STUDENT':
-                    return 'homepage' # CHANGE BASED ON IMPLEMENTATION #studHomePage
+                    return 'studHomePage' # CHANGE BASED ON IMPLEMENTATION #studHomePage
                 elif user_role == 'COMPANY':
                     return 'homepage' # CHANGE BASED ON IMPLEMENTATION
                 elif user_role == 'MASTER':
