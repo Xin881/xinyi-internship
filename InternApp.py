@@ -7,8 +7,6 @@ import os
 import boto3
 import botocore
 from flask import send_file
-# import pdfplumber
-# Use BytesIO to handle the binary content
 from werkzeug.utils import secure_filename
 from config import *
 
