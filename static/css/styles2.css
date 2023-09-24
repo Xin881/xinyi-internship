@@ -161,6 +161,7 @@ img{
 
 .login__button:hover{
   background-color: var(--first-color-dark);
+  cursor: pointer;
 }
 
 .login__account, .login__signin, .login__signup{
