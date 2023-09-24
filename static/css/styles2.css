@@ -197,6 +197,13 @@ img{
   display: none;
 }
 
+select {
+  border: none; /* Remove the border */
+  outline: none; /* Remove the outline when focused */
+  background-color: #FFF;
+  padding-right: 170px;
+}
+
 /* ===== MEDIA QUERIES =====*/
 @media screen and (min-width: 576px){
   .login__forms{
