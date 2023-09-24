@@ -50,7 +50,7 @@ def adminHomePage():
 
 @app.route("/compHomePage", methods=['GET', 'POST'])
 def compHomePage():
-    return render_template('comp_companyform.html')
+    return render_template('comp_home.html')
 
 @app.route("/studHomePage", methods=['GET', 'POST'])
 def studHomePage():
@@ -60,9 +60,14 @@ def studHomePage():
 def studRegisterPage():
     return render_template('stud_registerForm.html')
 
-@app.route("/addStudOutputPage", methods=['GET', 'POST'])
-def addStudOutputPage():
-    return render_template('stud_addStudOutput.html')
+@app.route("/compRegisterPage", methods=['GET', 'POST'])
+def compRegisterPage():
+    # return render_template('comp_companyform.html')
+    return redirect(url_for('companyForm'))
+
+@app.route("/addComOutputPage", methods=['GET', 'POST'])
+def addCompOutputPage():
+    return render_template('comp_addComOutput.html')
 
 @app.route("/ziyuPortfolio", methods=['GET', 'POST'])
 def ziyuPortfolio():
@@ -484,7 +489,7 @@ def AddEmp():
         cursor.close()
 
     print("all modification done...")
-    return render_template('appStudOutput.html', name=stud_name, object_url=object_url)
+    return render_template('stud_addStudOutput.html', name=stud_name, object_url=object_url)
         #return to xinyi
 
 
@@ -542,9 +547,9 @@ def companyform():
             cursor.close()
 
         print("all modification done...")
-        return render_template('AddComOutput.html', name=com_name)
+        return render_template('comp_addComOutput.html', name=com_name)
             #return to company profile page
-    return render_template('companyform.html')
+    return render_template('comp_companyform.html')
 
 
 if __name__ == '__main__':
