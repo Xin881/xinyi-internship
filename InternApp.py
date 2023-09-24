@@ -63,7 +63,7 @@ def studRegisterPage():
 @app.route("/compRegisterPage", methods=['GET', 'POST'])
 def compRegisterPage():
     # return render_template('comp_companyform.html')
-    return redirect(url_for('companyForm'))
+    return redirect(url_for('companyform'))
 
 @app.route("/addComOutputPage", methods=['GET', 'POST'])
 def addCompOutputPage():
