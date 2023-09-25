@@ -441,7 +441,7 @@ def EditStudProfile(stud_email):
 
 
             flash("Student profile updated successfully", "success")
-            return render_template('StudProfile.html', stud_email=stud_email)
+            return redirect('/studProfile/')
     
     return "Student not found"
 
