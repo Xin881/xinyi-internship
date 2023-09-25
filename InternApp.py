@@ -333,6 +333,7 @@ def get_student_data(stud_id):
 
 @app.route("/studProfile/", methods=['GET', 'POST'])
 def GetStudInfo(stud_email):
+    stud_email = stud_email
     username = session.get('username')
 
     if username:
