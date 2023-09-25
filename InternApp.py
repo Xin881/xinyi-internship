@@ -342,8 +342,10 @@ def GetStudInfo():
         cursor.execute(statement, (username,))
         student_data = cursor.fetchone()
         cursor.close()
-    
-        return render_template('studProfile.html', student=student_data)
+        
+        resume = "https://" + bucket + ".s3.amazonaws.com/stud-id-" + stud_email + "_pdf.pdf"
+        
+        return render_template('studProfile.html', student=student_data, resume=resume)
 
     return "Student not found"
 
