@@ -362,7 +362,15 @@ def EditStudProfile(stud_email):
             cursor.execute(statement, (username,))
             student_data = cursor.fetchone()
             cursor.close()
-	    resume = "https://" + bucket + ".s3.amazonaws.com/stud-id-" + stud_email + "_pdf.pdf"
+	resume = "https://" + bucket + ".s3.amazonaws.com/stud-id-" + stud_email + "_pdf.pdf"
+
+            #if results: 
+                #stud_id, stud_name, stud_gender, stud_IC, stud_email, stud_HP, stud_currAddress, stud_homeAddress, stud_programme, stud_cgpa, stud_resume, stud_cgpa = student_data
+                #resume = "https://" + bucket + ".s3.amazonaws.com/stud-id-" + studEmail + "_pdf.pdf"
+                #return render_template('comp_displayStudResume.html', student=student_data, resume=resume)
+                
+            #else: 
+                #return "Invalid student."
             
             return render_template('editStudProfile.html', student=student_data)
     
@@ -406,6 +414,11 @@ def EditStudProfile(stud_email):
                         s3_location = '-' + s3_location
 
                     object_url = f"https://{custombucket}.s3.amazonaws.com/{stud_image_file_name_in_s3}"
+
+                    # object_url = "https://s3{0}.amazonaws.com/{1}/{2}".format(
+                    #     s3_location,
+                    #     custombucket,
+                    #     stud_resume_name_in_s3)
                     
                     # Update the stud_resume field in the database
                     cursor = db_conn.cursor()
