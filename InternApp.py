@@ -395,15 +395,9 @@ def EditStudProfile(stud_email):
             
             cursor = db_conn.cursor()
 
-            cursor.execute(update_sql, (stud_id, stud_name, stud_programme, stud_HP, stud_IC,
+            cursor.execute(update_sql, (stud_id, stud_name, stud_programme, stud_HP, stud_ic,
                                         stud_gender, stud_currAddress, stud_homeAddress, stud_email))
 
-            # cursor.execute(f"UPDATE student SET stud_id = '{stud_id}',stud_name = '{stud_name}', stud_programme = '{stud_programme}', "
-            #             f"stud_HP = '{stud_HP}', stud_IC = '{stud_ic}', "
-            #             f"stud_gender = '{stud_gender}', stud_currAddress = '{stud_currAddress}', "
-            #             f"stud_homeAddress = '{stud_homeAddress}' WHERE stud_email = {stud_email}")
-            db_conn.commit()
-            cursor.close()
             # cursor.execute(f"UPDATE student SET stud_id = '{stud_id}',stud_name = '{stud_name}', stud_programme = '{stud_programme}', "
             #             f"stud_HP = '{stud_HP}', stud_IC = '{stud_ic}', "
             #             f"stud_gender = '{stud_gender}', stud_currAddress = '{stud_currAddress}', "
@@ -436,7 +430,8 @@ def EditStudProfile(stud_email):
                     
                     # Update the stud_resume field in the database
                     cursor = db_conn.cursor()
-                    cursor.execute(f"UPDATE student SET stud_resume = '{object_url}' WHERE stud_email = {stud_email}")
+                    update_image = f"UPDATE student SET stud_resume = %s WHERE stud_email = %s"
+                    cursor.execute(update_image, ( object_url, stud_email))
                     db_conn.commit()
                     cursor.close()
 
