@@ -406,7 +406,7 @@ def EditStudProfile(stud_email):
             cursor.close()
 
             # Check if a new resume file is provided
-            if stud_resume.filename != "":
+            if stud_image_file.filename != "":
                 s3 = boto3.resource('s3')
                 stud_image_file_name_in_s3 = "stud-id-" + str(stud_email) + "_pdf.pdf"
 
