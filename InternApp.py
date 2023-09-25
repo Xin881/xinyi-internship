@@ -362,16 +362,9 @@ def EditStudProfile(stud_email):
             cursor.execute(statement, (username,))
             student_data = cursor.fetchone()
             cursor.close()
-
-            if student_data: 
-                stud_id, stud_name, stud_gender, stud_IC, stud_email, stud_HP, stud_currAddress, stud_homeAddress, stud_programme, stud_resume, stud_cgpa = student_data
-                resume = "https://" + bucket + ".s3.amazonaws.com/stud-id-" + stud_email + "_pdf.pdf"
-                return render_template('comp_displayStudResume.html', student=student_data, resume=resume)
-                
-            else: 
-                return "Invalid student."
+	    resume = "https://" + bucket + ".s3.amazonaws.com/stud-id-" + stud_email + "_pdf.pdf"
             
-            return render_template('stud_editStudProfile.html', student=student_data)
+            return render_template('editStudProfile.html', student=student_data)
     
 
         elif request.method == 'POST':
@@ -379,6 +372,7 @@ def EditStudProfile(stud_email):
             stud_id = request.form['stud_id']
             stud_name = request.form['stud_name']
             stud_programme = request.form['stud_programme']
+            # stud_email = request.form['stud_email']
             stud_HP = request.form['stud_HP']
             stud_ic = request.form['stud_ic']
             stud_gender = request.form['stud_gender']
