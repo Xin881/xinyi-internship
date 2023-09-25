@@ -362,7 +362,7 @@ def EditStudProfile(stud_email):
             cursor.execute(statement, (username,))
             student_data = cursor.fetchone()
             cursor.close()
-	resume = "https://" + bucket + ".s3.amazonaws.com/stud-id-" + stud_email + "_pdf.pdf"
+            resume = "https://" + bucket + ".s3.amazonaws.com/stud-id-" + stud_email + "_pdf.pdf"
 
             #if results: 
                 #stud_id, stud_name, stud_gender, stud_IC, stud_email, stud_HP, stud_currAddress, stud_homeAddress, stud_programme, stud_cgpa, stud_resume, stud_cgpa = student_data
